@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from scipy.spatial.transform import Rotation
-from data import measurements, System
+from src.data import measurements, System
 
 
 def gen_rot_x(angle):
