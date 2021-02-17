@@ -83,7 +83,7 @@ def system_average(S):
 
 
 def print_system(system):
-    print(f"Base station {system.bs} @ {system.P}")
+    print(f"Base station {system.bs} @ {system.P}, {system.R}")
 
 
 def probe_position(Sbs_ref, Sbs0_other, Sbs1_other):
