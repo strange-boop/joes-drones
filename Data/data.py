@@ -1,3 +1,7 @@
+# 0 and 1 are on the ceiling point down.
+# 2 is on the floor pointing up
+
+
 measurements = [
     [
         # The global ref frame - the origin
