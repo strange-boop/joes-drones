@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from scipy.spatial.transform import Rotation
-from src.data import measurements, System
+from src.data import measurements, System, FLIPPED_BS, BOX_HEIGHT
 
 
 def gen_rot_x(angle):
@@ -87,17 +87,6 @@ def print_system(system):
 
 
 def probe_position(Sbs_ref, Sbs0_other, Sbs1_other):
-    """
-    Find the position of
-
-    Args:
-        Sbs_ref: the reference system that defines global coordinates
-        Sbs0_other: the reference system of our current measurement
-        Sbs1_other: the reference system of a measurement not
-
-    Returns:
-
-    """
 
     # Find transform from other ref frame to global using bs0
     Sother_g = transform_from_ref_x_to_r_same_bs(Sbs0_other, Sbs_ref)
@@ -106,10 +95,54 @@ def probe_position(Sbs_ref, Sbs0_other, Sbs1_other):
     # global
     Sbs1mOther_g = transform_x_to_r(Sbs1_other, Sother_g)
 
+    # Base station to
+
     return Sbs1mOther_g
 
 
+def flip_system(s):
+    """
+    For a system corresponding to a base station that is below the drone
+    (as opposed to above), we need to mirror the data such that
+    """
+    return System(
+        np.array([
+            -1 * s.P[0],  # X is opposite of measured position when flipped
+            -1 * s.P[1],  # Y is opposite of measure position when flipped
+            BOX_HEIGHT - s.P[2]]   # Z is total height minus measure position
+                                   # when flipped
+        ),
+        s.R,  # TODO figure out how to update the rotational matrix
+        s.bs  # Base station code
+    )
+
+# Error: [1.56235933 1.18148872 2.1329875 ]
+
+
+def flip_system_if_downside_up(s):
+    if s.bs in FLIPPED_BS:
+        return flip_system(s)
+    return s
+
+
+def preprocess_measurements(measurements):
+    updated = []
+    for m in measurements:
+        flipped = [flip_system_if_downside_up(system) for system in m]
+        updated.append(flipped)
+
+    return updated
+
+
+
 print()
+
+
+# Base station 0 @ [1.47847584 0.62331302 2.51551105]
+# Base station 1 @ [-0.55850164 -0.788018    2.52651592]
+# Base station 2 @ [ 0.01538161 -0.36663053  2.70393448]
+
+measurements = preprocess_measurements(measurements)
 
 # Arbitrarily choose a base station measurement to use as our reference
 ref = measurements[0][0]
@@ -175,5 +208,20 @@ while not_done:
         found.append(new_sys.bs)
 
 
+bs_map = {}
+
 for system in result:
     print_system(system)
+    bs_map[system.bs] = system.P
+
+
+# for data in data.py:
+# for bs 2, x and y values should be same as bs 1,
+# and z values should be almost 0
+# first measurement is drone on the floor
+error = np.array([
+    bs_map[2][0] - bs_map[1][0],
+    bs_map[2][1] - bs_map[1][1],
+    bs_map[2][2]
+])
+print(f"Error: {error}")
