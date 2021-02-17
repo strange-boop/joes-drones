@@ -5,12 +5,9 @@ import numpy as np
 
 System = namedtuple("System", ['P', 'R', 'bs'])
 
+FLIPPED_BS = [2]
 
-BS_ORIENTATIONS = {
-    "0": "down",
-    "1": "down",
-    "2": "up"
-}
+BOX_HEIGHT = 2.52
 
 
 measurements = [
